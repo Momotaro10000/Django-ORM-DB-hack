@@ -1,6 +1,5 @@
 from datacenter.models import Schoolkid,Mark,Lesson,Chastisement,Commendation
-from django.core.exceptions import ObjectDoesNotExist
-from django.core.exceptions import MultipleObjectsReturned
+from django.core.exceptions import ObjectDoesNotExist,MultipleObjectsReturned 
 import random
 
 
@@ -9,7 +8,7 @@ def get_kid_account(kid_name):
         kid = Schoolkid.objects.filter(full_name__contains=kid_name).get()
         return kid
     except ObjectDoesNotExist:
-        print('Такого ученика {} в списке нет! Проверь, правильно ли написано имя.'.format(kid_name))
+        print('Ученика {} в списке нет! Проверь, правильно ли написано имя.'.format(kid_name))
         return None
     except MultipleObjectsReturned:
         print('Учеников с именем {} слишком много, укажи полное имя.'.format(kid_name))
@@ -35,6 +34,17 @@ def remove_chastisements(kid_name):
 
 
 def create_commendation(kid_name,subject):
+    kid = get_kid_account(kid_name)
+    if not kid:
+        return None
+    kid_lesson = Lesson.objects.filter(
+        year_of_study=kid.year_of_study,
+        group_letter=kid.group_letter,
+        subject__title=subject,
+        ).order_by('date').first()
+    if not kid_lesson:
+        print('Такого предмета нет.')
+        return None
     commendations = [ 
         'Молодец!', 
         'Отлично!', 
@@ -60,13 +70,11 @@ def create_commendation(kid_name,subject):
         'Ты растешь над собой!', 
         'Теперь у тебя точно все получится!', 
     ]
-    kid = get_kid_account(kid_name)
-    if not kid:
-        return None
-    try: 
-        lessons = Lesson.objects.filter(year_of_study=kid.year_of_study,group_letter=kid.group_letter,subject__title=subject).order_by('date')
-        needed_lesson = lessons[0]
-        Commendation.objects.create(text=random.choice(commendations),created=needed_lesson.date,schoolkid=kid,subject=needed_lesson.subject,teacher=needed_lesson.teacher)
-    except ObjectDoesNotExist:
-        print('Предмета {} в списке нет! Кажется, в названии предмета ошибка.'.format(subject))
-        return None
+    Commendation.objects.create(
+        text=random.choice(commendations),
+        created=kid_lesson.date,
+        schoolkid=kid,
+        subject=kid_lesson.subject,
+        teacher=kid_lesson.teacher,
+    )
+  
