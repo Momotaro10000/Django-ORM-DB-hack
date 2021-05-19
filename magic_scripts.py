@@ -7,10 +7,10 @@ def get_kid_account(kid_name):
     try:
         kid = Schoolkid.objects.filter(full_name__contains=kid_name).get()
         return kid
-    except ObjectDoesNotExist:
+    except Schoolkid.DoesNotExist:
         print('Ученика {} в списке нет! Проверь, правильно ли написано имя.'.format(kid_name))
         return None
-    except MultipleObjectsReturned:
+    except Schoolkid.MultipleObjectsReturned:
         print('Учеников с именем {} слишком много, укажи полное имя.'.format(kid_name))
         return None
 
